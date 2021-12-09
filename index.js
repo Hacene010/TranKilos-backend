@@ -1,39 +1,24 @@
 const express = require('express');
 const cors = require('cors');
-const { db, backPort } = require('./conf');
+const passport = require('passport');
+const { backPort } = require('./conf');
 
 const app = express();
+const users = require('./routes/users');
+const dishes = require('./routes/dishes');
+const auth = require('./routes/auth');
 
 app.use(cors());
 app.use(express.json());
+app.use(passport.initialize());
 
-app.get('/dishes', async (req, res) => {
-  try {
-    const [rows] = await db.query(
-      'SELECT id, name, img, category, area FROM dish'
-    );
+app.use('/users', users);
+app.use('/dishes', dishes);
 
-    res.status(200).json(rows);
-  } catch (err) {
-    res.status(400).send(err);
-  }
-});
-
-app.get('/dishes/:id', async (req, res) => {
-  const { id } = req.params;
-  const sql = 'SELECT id, name, img, category, area FROM dish WHERE id = ?';
-  const sqlValues = [id];
-  try {
-    const [results] = await db.query(sql, sqlValues);
-    res.status(200).json(results);
-    console.log(results);
-  } catch (err) {
-    res.status(400).send(err);
-  }
-});
+app.use('/auth', auth);
 
 app.use('/', (req, res) => {
-  res.status(404).send('Route not found! ');
+  res.status(404).send(`Page not found : ${req.url}`);
 });
 
 app.listen(backPort, () => {
